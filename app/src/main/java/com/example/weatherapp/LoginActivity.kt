@@ -1,6 +1,6 @@
 package com.example.weatherapp
 
-import android.R
+
 import android.app.Activity
 import android.os.Bundle
 import android.widget.Toast
@@ -33,6 +33,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.weatherapp.ui.theme.WeatherAppTheme
 import org.intellij.lang.annotations.JdkConstants
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
+
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,24 +84,51 @@ fun LoginPage(modifier: Modifier = Modifier) {
             visualTransformation = PasswordVisualTransformation()
         )
         Row(
-            modifier = modifier.padding(12.dp).fillMaxSize(),
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(12.dp),
             horizontalArrangement = Arrangement.Center,
 
         )
 
         {
-            Button( onClick = {
-                Toast.makeText(activity, "Login OK!", Toast.LENGTH_LONG).show()
+            Button(
+                onClick = {
 
-            },
+                    Toast.makeText(activity, "Login OK!", Toast.LENGTH_LONG).show()
+
+                    activity.startActivity(
+                        Intent(activity, MainActivity::class.java)
+                            .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    )
+
+                },
+
                 enabled = email.isNotEmpty() && password.isNotEmpty()
                 ) {
                 Text("Login")
             }
+            Spacer(modifier = Modifier.size(12.dp))
+
+
             Button(
                 onClick = { email = ""; password = "" },
             ) {
                 Text("Limpar")
+            }
+
+            Spacer(modifier = Modifier.size(12.dp))
+
+            Button(
+                onClick = {
+
+                    activity.startActivity(
+                        Intent(activity, RegisterActivity::class.java)
+                    )
+
+                }
+            ) {
+                Text("Registrar")
             }
         }
     }
