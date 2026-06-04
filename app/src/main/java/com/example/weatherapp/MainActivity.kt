@@ -4,8 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -17,18 +17,17 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
-import com.example.weatherapp.ui.HomePage
 import com.example.weatherapp.ui.nav.BottomNavBar
 import com.example.weatherapp.ui.nav.BottomNavItem
 import com.example.weatherapp.ui.nav.MainNavHost
 import com.example.weatherapp.ui.theme.WeatherAppTheme
+import com.example.weatherapp.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
+    private val viewModel: MainViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -48,7 +47,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         )
-                    },
+                     },
                     bottomBar = {
                         // Lista com os botões que criamos na Parte 2
                         val items = listOf(
@@ -57,7 +56,10 @@ class MainActivity : ComponentActivity() {
                             BottomNavItem.MapButton
                         )
                         // Renderiza a nossa barra inferior personalizada
-                        BottomNavBar(navController = navController, items = items)
+                        BottomNavBar(
+                            navController = navController,
+                            items = items
+                        )
                     },
                     floatingActionButton = {
                         FloatingActionButton(onClick = { /* Ação futura */ }) {
@@ -67,7 +69,10 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     // O Box garante que o conteúdo das páginas respeite as barras topo/inferior
                     Box(modifier = Modifier.padding(innerPadding)) {
-                        MainNavHost(navController = navController)
+                        MainNavHost(
+                            navController = navController,
+                            viewModel = viewModel
+                        )
                     }
                 }
             }
@@ -75,10 +80,3 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    WeatherAppTheme {
-        HomePage()
-    }
-}
