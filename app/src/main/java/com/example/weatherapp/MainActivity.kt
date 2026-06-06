@@ -62,13 +62,13 @@ class MainActivity : ComponentActivity() {
                         )
                      },
                     bottomBar = {
-                        // Lista com os botões que criamos na Parte 2
+
                         val items = listOf(
                             BottomNavItem.HomeButton,
                             BottomNavItem.ListButton,
                             BottomNavItem.MapButton
                         )
-                        // Renderiza a nossa barra inferior personalizada
+
                         BottomNavBar(
                             navController = navController,
                             items = items
