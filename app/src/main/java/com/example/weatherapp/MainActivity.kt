@@ -69,7 +69,6 @@ class MainActivity : ComponentActivity() {
 
                                         Firebase.auth.signOut()
 
-                                        finish()
                                     }
                                 ) {
                                     Icon(
