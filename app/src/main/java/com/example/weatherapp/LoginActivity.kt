@@ -35,6 +35,8 @@ import com.example.weatherapp.ui.theme.WeatherAppTheme
 import org.intellij.lang.annotations.JdkConstants
 import android.content.Intent
 import androidx.compose.ui.platform.LocalContext
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 
 class LoginActivity : ComponentActivity() {
@@ -95,12 +97,33 @@ fun LoginPage(modifier: Modifier = Modifier) {
             Button(
                 onClick = {
 
-                    Toast.makeText(activity, "Login OK!", Toast.LENGTH_LONG).show()
+                    Firebase.auth.signInWithEmailAndPassword(
+                        email,
+                        password
+                    ).addOnCompleteListener(activity) { task ->
 
-                    activity.startActivity(
-                        Intent(activity, MainActivity::class.java)
-                            .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    )
+                        if (task.isSuccessful) {
+
+                            activity.startActivity(
+                                Intent(activity, MainActivity::class.java)
+                                    .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                            )
+
+                            Toast.makeText(
+                                activity,
+                                "Login OK!",
+                                Toast.LENGTH_LONG
+                            ).show()
+
+                        } else {
+
+                            Toast.makeText(
+                                activity,
+                                "Login FALHOU!",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
 
                 },
 

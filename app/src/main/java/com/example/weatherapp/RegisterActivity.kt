@@ -1,7 +1,6 @@
 package com.example.weatherapp
 
-import android.R.attr.onClick
-import android.annotation.SuppressLint
+
 import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -28,7 +27,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.weatherapp.ui.theme.WeatherAppTheme
 import android.widget.Toast
-
+import androidx.compose.foundation.layout.Row
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 
 class RegisterActivity : ComponentActivity() {
@@ -70,7 +71,6 @@ fun RegisterPage(modifier: Modifier = Modifier) {
         modifier = modifier
             .padding(24.dp)
             .fillMaxSize(),
-
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -101,35 +101,53 @@ fun RegisterPage(modifier: Modifier = Modifier) {
             visualTransformation = PasswordVisualTransformation()
         )
 
-        Button(
-            onClick = {
-
-                Toast.makeText(
-                    activity,
-                    "Registro realizado!",
-                    Toast.LENGTH_LONG
-                ).show()
-
-                activity.finish()
-
-            },
-
-            enabled = formularioValido
+        Row(
+            modifier = Modifier.padding(top = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Registrar")
-        }
 
-        Button(
-            onClick = {
+            Button(
+                onClick = {
 
-                nome = ""
-                email = ""
-                senha = ""
-                repetirSenha = ""
+                    Firebase.auth
+                        .createUserWithEmailAndPassword(email, senha)
+                        .addOnCompleteListener(activity) { task ->
 
+                            if (task.isSuccessful) {
+
+                                Toast.makeText(
+                                    activity,
+                                    "Registro OK!",
+                                    Toast.LENGTH_LONG
+                                ).show()
+
+                                activity.finish()
+
+                            } else {
+
+                                Toast.makeText(
+                                    activity,
+                                    task.exception?.message ?: "Registro FALHOU!",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                },
+                enabled = formularioValido
+            ) {
+                Text("Registrar")
             }
-        ) {
-            Text("Limpar")
+
+            Button(
+                onClick = {
+                    nome = ""
+                    email = ""
+                    senha = ""
+                    repetirSenha = ""
+                }
+            ) {
+                Text("Limpar")
+            }
         }
     }
 }
