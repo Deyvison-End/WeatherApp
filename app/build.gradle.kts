@@ -58,6 +58,7 @@ dependencies {
 
     implementation("androidx.navigation:navigation-compose:2.9.8")
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("androidx.compose.material:material-icons-extended")
     // Google maps
