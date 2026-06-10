@@ -97,38 +97,35 @@ fun LoginPage(modifier: Modifier = Modifier) {
             Button(
                 onClick = {
 
-                    Firebase.auth.signInWithEmailAndPassword(
-                        email,
-                        password
-                    ).addOnCompleteListener(activity) { task ->
+                    Firebase.auth
+                        .signInWithEmailAndPassword(email, password)
+                        .addOnCompleteListener(activity) { task ->
 
-                        if (task.isSuccessful) {
+                            if (task.isSuccessful) {
 
-                            activity.startActivity(
-                                Intent(activity, MainActivity::class.java)
-                                    .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                            )
+                                activity.startActivity(
+                                    Intent(activity, MainActivity::class.java)
+                                        .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                                )
 
-                            Toast.makeText(
-                                activity,
-                                "Login OK!",
-                                Toast.LENGTH_LONG
-                            ).show()
+                                Toast.makeText(
+                                    activity,
+                                    "Login OK!",
+                                    Toast.LENGTH_LONG
+                                ).show()
 
-                        } else {
+                            } else {
 
-                            Toast.makeText(
-                                activity,
-                                "Login FALHOU!",
-                                Toast.LENGTH_LONG
-                            ).show()
+                                Toast.makeText(
+                                    activity,
+                                    "Login FALHOU!",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
                         }
-                    }
-
                 },
-
                 enabled = email.isNotEmpty() && password.isNotEmpty()
-                ) {
+            ) {
                 Text("Login")
             }
             Spacer(modifier = Modifier.size(12.dp))

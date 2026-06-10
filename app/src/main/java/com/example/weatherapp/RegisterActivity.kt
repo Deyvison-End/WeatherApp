@@ -127,7 +127,7 @@ fun RegisterPage(modifier: Modifier = Modifier) {
 
                                 Toast.makeText(
                                     activity,
-                                    task.exception?.message ?: "Registro FALHOU!",
+                                    "Registro FALHOU!",
                                     Toast.LENGTH_LONG
                                 ).show()
                             }
