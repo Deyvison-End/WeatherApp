@@ -142,11 +142,13 @@ fun LoginPage(modifier: Modifier = Modifier) {
             Button(
                 onClick = {
 
-                    Toast.makeText(
-                        activity,
-                        "Login OK!",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    activity.startActivity(
+                        Intent(
+                            activity,
+                            RegisterActivity::class.java
+                        )
+                    )
+
                 }
             ) {
                 Text("Registrar")

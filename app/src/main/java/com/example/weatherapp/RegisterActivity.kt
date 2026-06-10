@@ -28,6 +28,9 @@ import androidx.compose.ui.unit.dp
 import com.example.weatherapp.ui.theme.WeatherAppTheme
 import android.widget.Toast
 import androidx.compose.foundation.layout.Row
+import com.example.weatherapp.db.fb.FBDatabase
+import com.example.weatherapp.db.fb.toFBUser
+import com.example.weatherapp.model.User
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
@@ -114,6 +117,13 @@ fun RegisterPage(modifier: Modifier = Modifier) {
                         .addOnCompleteListener(activity) { task ->
 
                             if (task.isSuccessful) {
+
+                                FBDatabase().register(
+                                    User(
+                                        nome,
+                                        email
+                                    ).toFBUser()
+                                )
 
                                 Toast.makeText(
                                     activity,
