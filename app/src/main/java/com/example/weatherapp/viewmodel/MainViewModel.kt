@@ -11,11 +11,13 @@ import com.example.weatherapp.db.fb.toFBCity
 import com.example.weatherapp.model.City
 import com.example.weatherapp.model.User
 import com.google.android.gms.maps.model.LatLng
+import androidx.compose.runtime.mutableStateMapOf
+import com.example.weatherapp.api.toWeather
+import com.example.weatherapp.model.Weather
 
 fun getCities() = List(20) { i ->
     City(
         name = "Cidade $i",
-        weather = "Carregando clima..."
     )
 }
 
@@ -24,10 +26,12 @@ class MainViewModel(
     private val service: WeatherService
 ) : ViewModel(), FBDatabase.Listener {
 
-    private val _cities = mutableStateListOf<City>()
+    private val _cities = mutableStateMapOf<String, City>()
 
-    val cities
-        get() = _cities.toList()
+    val cities: List<City>
+        get() = _cities.values.toList().sortedBy { it.name }
+
+    private val _weather = mutableStateMapOf<String, Weather>()
 
     private val _user = mutableStateOf<User?>(null)
 
@@ -67,6 +71,19 @@ class MainViewModel(
             }
         }
     }
+    fun weather(name: String): Weather =
+        _weather.getOrPut(name) {
+            loadWeather(name)
+            Weather.LOADING
+        }
+
+    private fun loadWeather(name: String) {
+        service.getWeather(name) { apiWeather ->
+            apiWeather?.let {
+                _weather[name] = apiWeather.toWeather()
+            }
+        }
+    }
 
     override fun onUserLoaded(user: FBUser) {
         _user.value = user.toUser()
@@ -76,15 +93,15 @@ class MainViewModel(
     }
 
     override fun onCityAdded(city: FBCity) {
-        _cities.add(city.toCity())
+        _cities[city.name!!] = city.toCity()
     }
 
     override fun onCityUpdated(city: FBCity) {
+        _cities.remove(city.name)
+        _cities[city.name!!] = city.toCity()
     }
 
     override fun onCityRemoved(city: FBCity) {
-        _cities.removeIf {
-            it.name == city.name
-        }
+        _cities.remove(city.name)
     }
 }

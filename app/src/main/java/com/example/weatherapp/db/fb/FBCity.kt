@@ -19,7 +19,6 @@ class FBCity {
 
         return City(
             name = name!!,
-            weather = null,
             location = latlng
         )
     }
