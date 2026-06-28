@@ -110,6 +110,7 @@ fun ListPage(
                 city = city,
                 weather = viewModel.weather(city.name),
                 onClick = {
+                    viewModel.city = city.name
                     Toast.makeText(
                         activity,
                         "Você clicou em ${city.name}",

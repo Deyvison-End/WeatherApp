@@ -14,6 +14,8 @@ import com.google.android.gms.maps.model.LatLng
 import androidx.compose.runtime.mutableStateMapOf
 import com.example.weatherapp.api.toWeather
 import com.example.weatherapp.model.Weather
+import com.example.weatherapp.model.Forecast
+import com.example.weatherapp.api.toForecast
 
 fun getCities() = List(20) { i ->
     City(
@@ -33,10 +35,20 @@ class MainViewModel(
 
     private val _weather = mutableStateMapOf<String, Weather>()
 
+    private val _forecast = mutableStateMapOf<String, List<Forecast>?>()
+
     private val _user = mutableStateOf<User?>(null)
 
     val user: User?
         get() = _user.value
+
+    private var _city = mutableStateOf<String?>(null)
+
+    var city: String?
+        get() = _city.value
+        set(value) {
+            _city.value = value
+        }
 
     init {
         db.setListener(this)
@@ -81,6 +93,19 @@ class MainViewModel(
         service.getWeather(name) { apiWeather ->
             apiWeather?.let {
                 _weather[name] = apiWeather.toWeather()
+            }
+        }
+    }
+
+    fun forecast(name: String): List<Forecast>? =
+        _forecast.getOrPut(name) {
+            loadForecast(name)
+            emptyList()
+        }
+    private fun loadForecast(name: String) {
+        service.getForecast(name) { apiForecast ->
+            apiForecast?.let {
+                _forecast[name] = apiForecast.toForecast()
             }
         }
     }
