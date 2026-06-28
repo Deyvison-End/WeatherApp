@@ -16,6 +16,7 @@ import com.example.weatherapp.api.toWeather
 import com.example.weatherapp.model.Weather
 import com.example.weatherapp.model.Forecast
 import com.example.weatherapp.api.toForecast
+import com.example.weatherapp.ui.nav.Route
 
 fun getCities() = List(20) { i ->
     City(
@@ -33,6 +34,13 @@ class MainViewModel(
     val cities: List<City>
         get() = _cities.values.toList().sortedBy { it.name }
 
+    private var _page = mutableStateOf<Route>(Route.Home)
+
+    var page: Route
+        get() = _page.value
+        set(value) {
+            _page.value = value
+        }
     private val _weather = mutableStateMapOf<String, Weather>()
 
     private val _forecast = mutableStateMapOf<String, List<Forecast>?>()

@@ -18,6 +18,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -128,6 +129,7 @@ class MainActivity : ComponentActivity() {
                         )
 
                         BottomNavBar(
+                            viewModel = viewModel,
                             navController = navController,
                             items = items
                         )
@@ -150,9 +152,7 @@ class MainActivity : ComponentActivity() {
                     }
                 ) { innerPadding ->
 
-                    Box(
-                        modifier = Modifier.padding(innerPadding)
-                    ) {
+                    Box(modifier = Modifier.padding(innerPadding)) {
 
                         launcher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
 
@@ -160,6 +160,23 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             viewModel = viewModel
                         )
+                    }
+
+                    LaunchedEffect(viewModel.page) {
+
+                        navController.navigate(viewModel.page) {
+
+                            navController.graph.startDestinationRoute?.let {
+
+                                popUpTo(it) {
+                                    saveState = true
+                                }
+
+                                restoreState = true
+                            }
+
+                            launchSingleTop = true
+                        }
                     }
                 }
             }

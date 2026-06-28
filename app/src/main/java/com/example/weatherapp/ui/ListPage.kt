@@ -30,6 +30,7 @@ import com.example.weatherapp.model.City
 import com.example.weatherapp.viewmodel.MainViewModel
 import androidx.compose.ui.platform.LocalContext
 import com.example.weatherapp.model.Weather
+import com.example.weatherapp.ui.nav.Route
 
 @Composable
 fun CityItem(
@@ -111,6 +112,7 @@ fun ListPage(
                 weather = viewModel.weather(city.name),
                 onClick = {
                     viewModel.city = city.name
+                    viewModel.page = Route.Home
                     Toast.makeText(
                         activity,
                         "Você clicou em ${city.name}",
