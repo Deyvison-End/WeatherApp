@@ -27,6 +27,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.weatherapp.api.WeatherService
 import com.example.weatherapp.db.fb.FBDatabase
 import com.example.weatherapp.ui.CityDialog
 import com.example.weatherapp.ui.nav.BottomNavBar
@@ -45,28 +46,56 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
+
             val fbDB = remember {
                 FBDatabase()
             }
 
+            val weatherService = remember {
+                WeatherService()
+            }
+
             val viewModel: MainViewModel = viewModel(
-                factory = MainViewModelFactory(fbDB)
-            )
-            var showDialog by remember { mutableStateOf(false) }
-            val navController = rememberNavController()
-            val currentRoute = navController.currentBackStackEntryAsState()
-            val showButton = currentRoute.value?.destination?.hasRoute(Route.List::class) == true
-            val launcher = rememberLauncherForActivityResult(contract =
-                ActivityResultContracts.RequestPermission(), onResult = {} )
-            WeatherAppTheme {
-                if (showDialog) CityDialog(
-                    onDismiss = { showDialog = false },
-                    onConfirm = { city ->
-                        if (city.isNotBlank()) viewModel.add(city)
-                        showDialog = false
-                    }
+                factory = MainViewModelFactory(
+                    fbDB,
+                    weatherService
                 )
+            )
+
+            var showDialog by remember {
+                mutableStateOf(false)
+            }
+
+            val navController = rememberNavController()
+
+            val currentRoute = navController.currentBackStackEntryAsState()
+
+            val showButton =
+                currentRoute.value?.destination?.hasRoute(Route.List::class) == true
+
+            val launcher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission(),
+                onResult = {}
+            )
+
+            WeatherAppTheme {
+
+                if (showDialog) {
+                    CityDialog(
+                        onDismiss = {
+                            showDialog = false
+                        },
+                        onConfirm = { city ->
+                            if (city.isNotBlank()) {
+                                viewModel.addCity(city)
+                            }
+                            showDialog = false
+                        }
+                    )
+                }
+
                 Scaffold(
                     topBar = {
                         TopAppBar(
@@ -77,12 +106,9 @@ class MainActivity : ComponentActivity() {
                                 Text("Bem-vindo/a! $name")
                             },
                             actions = {
-
                                 IconButton(
                                     onClick = {
-
                                         Firebase.auth.signOut()
-
                                     }
                                 ) {
                                     Icon(
@@ -92,7 +118,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         )
-                     },
+                    },
                     bottomBar = {
 
                         val items = listOf(
@@ -107,17 +133,29 @@ class MainActivity : ComponentActivity() {
                         )
                     },
                     floatingActionButton = {
+
                         if (showButton) {
-                            FloatingActionButton(onClick = { showDialog = true }) {
-                                Icon(Icons.Default.Add, contentDescription = "Adicionar")
+
+                            FloatingActionButton(
+                                onClick = {
+                                    showDialog = true
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Adicionar cidade"
+                                )
                             }
                         }
                     }
-
                 ) { innerPadding ->
-                    // O Box garante que o conteúdo das páginas respeite as barras topo/inferior
-                    Box(modifier = Modifier.padding(innerPadding)) {
+
+                    Box(
+                        modifier = Modifier.padding(innerPadding)
+                    ) {
+
                         launcher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+
                         MainNavHost(
                             navController = navController,
                             viewModel = viewModel
@@ -128,4 +166,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
