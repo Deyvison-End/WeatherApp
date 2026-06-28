@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
             }
 
             val weatherService = remember {
-                WeatherService()
+                WeatherService(this)
             }
 
             val viewModel: MainViewModel = viewModel(
