@@ -22,12 +22,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.Icon
+import androidx.compose.ui.res.painterResource
+import coil.compose.AsyncImage
 import java.text.DecimalFormat
 import com.example.weatherapp.model.Forecast
+import com.example.weatherapp.R
 
 
 @Composable
@@ -61,10 +60,11 @@ fun HomePage(
 
             Row {
 
-                Icon(
-                    imageVector = Icons.Filled.AccountBox,
-                    contentDescription = "Cidade",
-                    modifier = modifier.size(150.dp)
+                AsyncImage( // Substitui o Icon
+                    model = viewModel.weather(viewModel.city!!).imgUrl,
+                    modifier = modifier.size(140.dp),
+                    error = painterResource(id = R.drawable.loading),
+                    contentDescription = "Imagem"
                 )
 
                 Column {
@@ -136,11 +136,13 @@ fun ForecastItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        Icon(
-            imageVector = Icons.Filled.LocationOn,
-            contentDescription = "Previsão",
-            modifier = modifier.size(48.dp)
+        AsyncImage( // Substitui o Icon
+            model = forecast.imgUrl,
+            modifier = modifier.size(70.dp),
+            error = painterResource(id = R.drawable.loading),
+            contentDescription = "Imagem"
         )
+
 
         Spacer(modifier = modifier.size(16.dp))
 

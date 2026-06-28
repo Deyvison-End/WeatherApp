@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation("com.squareup.retrofit2:retrofit:3.0.0")
     implementation("com.squareup.retrofit2:converter-gson:3.0.0")
+    implementation("io.coil-kt:coil-compose:2.7.0")
 
     implementation("androidx.navigation:navigation-compose:2.9.8")
     implementation(libs.firebase.auth)
