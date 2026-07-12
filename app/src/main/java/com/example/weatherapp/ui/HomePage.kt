@@ -22,6 +22,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material3.Icon
 import androidx.compose.ui.res.painterResource
 import coil.compose.AsyncImage
 import java.text.DecimalFormat
@@ -58,9 +62,19 @@ fun HomePage(
 
         } else {
 
+            val city = viewModel.cities.find {
+                it.name == viewModel.city
+            }
+
+            val icon =
+                if (city?.isMonitored == true)
+                    Icons.Filled.Notifications
+                else
+                    Icons.Outlined.Notifications
+
             Row {
 
-                AsyncImage( // Substitui o Icon
+                AsyncImage(
                     model = viewModel.weather(viewModel.city!!).imgUrl,
                     modifier = modifier.size(140.dp),
                     error = painterResource(id = R.drawable.loading),
@@ -71,10 +85,34 @@ fun HomePage(
 
                     Spacer(modifier = modifier.size(12.dp))
 
-                    Text(
-                        text = viewModel.city ?: "Selecione uma cidade...",
-                        fontSize = 28.sp
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        Text(
+                            text = viewModel.city ?: "Selecione uma cidade...",
+                            fontSize = 28.sp
+                        )
+
+                        Spacer(modifier = Modifier.size(8.dp))
+
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = "Monitorada?",
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clickable {
+                                    city?.let {
+                                        viewModel.update(
+                                            it.copy(
+                                                isMonitored = !it.isMonitored
+                                            )
+                                        )
+                                    }
+                                }
+                        )
+                    }
+
 
                     viewModel.city?.let { name ->
 
