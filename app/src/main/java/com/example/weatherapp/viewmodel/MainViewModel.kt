@@ -18,6 +18,7 @@ import com.example.weatherapp.model.Weather
 import com.example.weatherapp.model.Forecast
 import com.example.weatherapp.api.toForecast
 import com.example.weatherapp.ui.nav.Route
+import com.example.weatherapp.monitor.ForecastMonitor
 
 fun getCities() = List(20) { i ->
     City(
@@ -27,7 +28,8 @@ fun getCities() = List(20) { i ->
 
 class MainViewModel(
     private val db: FBDatabase,
-    private val service: WeatherService
+    private val service: WeatherService,
+    private val monitor: ForecastMonitor
 ) : ViewModel(), FBDatabase.Listener {
 
     private val _cities = mutableStateMapOf<String, City>()
@@ -141,14 +143,17 @@ class MainViewModel(
 
     override fun onCityAdded(city: FBCity) {
         _cities[city.name!!] = city.toCity()
+        monitor.updateCity(city.toCity())
     }
 
     override fun onCityUpdated(city: FBCity) {
         _cities.remove(city.name)
         _cities[city.name!!] = city.toCity()
+        monitor.updateCity(city.toCity())
     }
 
     override fun onCityRemoved(city: FBCity) {
         _cities.remove(city.name)
+        monitor.cancelCity(city.toCity())
     }
 }

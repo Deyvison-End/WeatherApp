@@ -40,6 +40,10 @@ import com.example.weatherapp.viewmodel.MainViewModel
 import com.example.weatherapp.viewmodel.MainViewModelFactory
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.example.weatherapp.monitor.ForecastMonitor
+import androidx.compose.runtime.DisposableEffect
+import androidx.core.util.Consumer
+import android.content.Intent
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
@@ -58,12 +62,32 @@ class MainActivity : ComponentActivity() {
                 WeatherService(this)
             }
 
+            val forecastMonitor = remember {
+                ForecastMonitor(this)
+            }
+
             val viewModel: MainViewModel = viewModel(
                 factory = MainViewModelFactory(
                     fbDB,
-                    weatherService
+                    weatherService,
+                    forecastMonitor
                 )
             )
+
+            DisposableEffect(Unit) {
+
+                val listener = Consumer<Intent> { intent ->
+
+                    viewModel.city = intent.getStringExtra("city")
+                    viewModel.page = Route.Home
+                }
+
+                addOnNewIntentListener(listener)
+
+                onDispose {
+                    removeOnNewIntentListener(listener)
+                }
+            }
 
             var showDialog by remember {
                 mutableStateOf(false)
