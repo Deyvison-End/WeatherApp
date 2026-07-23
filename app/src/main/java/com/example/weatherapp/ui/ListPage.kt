@@ -23,10 +23,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.weatherapp.model.City
 import com.example.weatherapp.viewmodel.MainViewModel
@@ -101,7 +103,8 @@ fun CityItem(
             Text(
                 text = desc,
                 fontSize = 16.sp
-            )        }
+            )
+        }
 
         IconButton(
             onClick = onClose
@@ -120,9 +123,13 @@ fun ListPage(
     viewModel: MainViewModel
 ) {
 
-    val activity = LocalContext.current as? Activity
-    val cityList = viewModel.cities
+    val activity = LocalActivity.current as Activity
 
+
+    val cityMap = viewModel.cities.collectAsStateWithLifecycle(emptyMap()).value
+    val cityList = cityMap.values.toList().sortedBy { it.name }
+
+    val weatherMap = viewModel.weather.collectAsStateWithLifecycle(emptyMap()).value
 
     LazyColumn(
         modifier = modifier
@@ -130,11 +137,18 @@ fun ListPage(
             .padding(8.dp)
     ) {
 
-        items(cityList, key = { it.name }) { city ->
+        items(items = cityList, key = { it.name }) { city ->
+
+
+            LaunchedEffect(city.name) {
+                viewModel.loadWeather(city.name)
+            }
+
+            val weather = weatherMap[city.name] ?: Weather.LOADING
 
             CityItem(
                 city = city,
-                weather = viewModel.weather(city.name),
+                weather = weather,
                 onClick = {
                     viewModel.city = city.name
                     viewModel.page = Route.Home

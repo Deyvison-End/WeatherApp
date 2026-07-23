@@ -2,52 +2,34 @@ package com.example.weatherapp.viewmodel
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.api.WeatherService
-import com.example.weatherapp.repo.Repository
-import com.example.weatherapp.model.City
-import com.example.weatherapp.model.User
-import com.google.android.gms.maps.model.LatLng
-import androidx.compose.runtime.mutableStateMapOf
-import com.example.weatherapp.api.toWeather
-import com.example.weatherapp.model.Weather
-import com.example.weatherapp.model.Forecast
 import com.example.weatherapp.api.toForecast
-import com.example.weatherapp.ui.nav.Route
+import com.example.weatherapp.api.toWeather
+import com.example.weatherapp.model.City
+import com.example.weatherapp.model.Forecast
+import com.example.weatherapp.model.Weather
 import com.example.weatherapp.monitor.ForecastMonitor
-
-fun getCities() = List(20) { i ->
-    City(
-        name = "Cidade $i",
-    )
-}
+import com.example.weatherapp.repo.Repository
+import com.example.weatherapp.ui.nav.Route
+import com.google.android.gms.maps.model.LatLng
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class MainViewModel(
 
-    private val repository: Repository,
+    private val repo: Repository,
     private val service: WeatherService,
     private val monitor: ForecastMonitor
-) : ViewModel(), Repository.Listener {
 
-    private val _cities = mutableStateMapOf<String, City>()
-
-    val cities: List<City>
-        get() = _cities.values.toList().sortedBy { it.name }
-
-    private var _page = mutableStateOf<Route>(Route.Home)
-
-    var page: Route
-        get() = _page.value
-        set(value) {
-            _page.value = value
-        }
-    private val _weather = mutableStateMapOf<String, Weather>()
-
-    private val _forecast = mutableStateMapOf<String, List<Forecast>?>()
-
-    private val _user = mutableStateOf<User?>(null)
-
-    val user: User?
-        get() = _user.value
+) : ViewModel() {
 
     private var _city = mutableStateOf<String?>(null)
 
@@ -57,35 +39,75 @@ class MainViewModel(
             _city.value = value
         }
 
-    init {
-        repository.setListener(this)
-    }
+    private var _page = mutableStateOf<Route>(Route.Home)
+
+    var page: Route
+        get() = _page.value
+        set(value) {
+            _page.value = value
+        }
+
+    private val _cities: Flow<Map<String, City>> =
+        repo.cities.map { cityList ->
+            cityList.associateBy { it.name }
+        }
+
+    val cities = _cities.stateIn(
+        viewModelScope,
+        SharingStarted.Lazily,
+        emptyMap()
+    )
+
+    private val _weather =
+        MutableStateFlow<Map<String, Weather>>(emptyMap())
+
+    val weather = _weather.asSharedFlow()
+
+    private val _forecast =
+        MutableStateFlow<Map<String, List<Forecast>?>>(emptyMap())
+
+    val forecast = _forecast.asSharedFlow()
+
+    val user = repo.user.stateIn(
+        viewModelScope,
+        SharingStarted.Lazily,
+        null
+    )
 
     fun remove(city: City) {
-        repository.remove(city)
+        repo.remove(city)
+        monitor.cancelCity(city)
     }
 
     fun update(city: City) {
-        repository.update(city)
+        repo.update(city)
+        monitor.updateCity(city)
     }
 
-    fun addCity(name: String) {
-        service.getLocation(name) { lat, lng ->
-            if (lat != null && lng != null) {
-                repository.add(
-                    City(
-                        name = name,
-                        location = LatLng(lat, lng)
-                    )
+    fun addCity(name: String) =
+        viewModelScope.launch(Dispatchers.IO) {
+
+            val location = service.getLocation(name)
+
+            repo.add(
+                City(
+                    name = name,
+                    location = location
                 )
-            }
+            )
         }
-    }
 
-    fun addCity(location: LatLng) {
-        service.getName(location.latitude, location.longitude) { name ->
+    fun addCity(location: LatLng) =
+        viewModelScope.launch(Dispatchers.IO) {
+
+            val name = service.getName(
+                location.latitude,
+                location.longitude
+            )
+
             if (name != null) {
-                repository.add(
+
+                repo.add(
                     City(
                         name = name,
                         location = location
@@ -93,60 +115,85 @@ class MainViewModel(
                 )
             }
         }
-    }
 
-    fun weather(name: String): Weather =
-        _weather.getOrPut(name) {
-            loadWeather(name)
-            Weather.LOADING
-        }
+    fun loadWeather(name: String) {
 
-    private fun loadBitmap(name: String) {
-        _weather[name]?.let { weather ->
-            service.getBitmap(weather.imgUrl) { bitmap ->
-                _weather[name] = weather.copy(bitmap = bitmap)
+        if (_weather.value[name] != null)
+            return
+
+        viewModelScope.launch(Dispatchers.Main) {
+
+            _weather.update { current ->
+                current + (name to Weather.LOADING)
+            }
+
+            runCatching {
+
+                service.getWeather(name)?.toWeather()
+
+            }.onSuccess { weather ->
+
+                _weather.update { current ->
+                    current + (name to (weather ?: Weather.ERROR))
+                }
+
+            }.onFailure {
+
+                _weather.update { current ->
+                    current + (name to Weather.ERROR)
+                }
             }
         }
     }
 
-    private fun loadWeather(name: String) {
-        service.getWeather(name) { apiWeather ->
-            apiWeather?.let {
-                _weather[name] = apiWeather.toWeather()
-                loadBitmap(name)
+    fun loadForecast(name: String) {
+
+        if (_forecast.value[name] != null)
+            return
+
+        viewModelScope.launch(Dispatchers.Main) {
+
+            _forecast.update { current ->
+                current + (name to emptyList())
+            }
+
+            runCatching {
+
+                service.getForecast(name)?.toForecast()
+
+            }.onSuccess { forecast ->
+
+                _forecast.update { current ->
+                    current + (name to forecast)
+                }
+
+            }.onFailure {
+
+                _forecast.update { current ->
+                    current + (name to emptyList())
+                }
             }
         }
     }
 
-    fun forecast(name: String): List<Forecast>? =
-        _forecast.getOrPut(name) {
-            loadForecast(name)
-            emptyList()
-        }
-    private fun loadForecast(name: String) {
-        service.getForecast(name) { apiForecast ->
-            apiForecast?.let {
-                _forecast[name] = apiForecast.toForecast()
+    fun loadBitmap(name: String) {
+
+        val weather = _weather.value[name]
+
+        if (
+            weather == null ||
+            weather == Weather.LOADING ||
+            weather == Weather.ERROR ||
+            weather.bitmap != null
+        ) return
+
+        viewModelScope.launch(Dispatchers.Main) {
+
+            val bitmap = service.getBitmap(weather.imgUrl)
+
+            _weather.update { current ->
+                current + (name to weather.copy(bitmap = bitmap))
             }
         }
-    }
-
-    override fun onUserLoaded(user: User) {
-        _user.value = user
-    }
-
-    override fun onUserSignOut() {
-    }
-
-    override fun onCityAdded(city: City) {
-        _cities[city.name] = city
-    }
-
-    override fun onCityUpdated(city: City) {
-        _cities[city.name] = city
-    }
-
-    override fun onCityRemoved(city: City) {
-        _cities.remove(city.name)
     }
 }

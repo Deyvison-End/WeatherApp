@@ -26,10 +26,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Icon
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.res.painterResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import java.text.DecimalFormat
 import com.example.weatherapp.model.Forecast
+import com.example.weatherapp.model.Weather
 import com.example.weatherapp.R
 
 
@@ -62,8 +65,17 @@ fun HomePage(
 
         } else {
 
-            val city = viewModel.cities.find {
-                it.name == viewModel.city
+            val cities = viewModel.cities.collectAsStateWithLifecycle(emptyMap()).value
+            val city = cities[viewModel.city!!]
+
+            val weather = viewModel.weather.collectAsStateWithLifecycle(emptyMap())
+                .value[viewModel.city!!] ?: Weather.LOADING
+
+            val forecasts = viewModel.forecast.collectAsStateWithLifecycle(emptyMap())
+                .value[viewModel.city!!]
+
+            LaunchedEffect(viewModel.city!!) {
+                viewModel.loadForecast(viewModel.city!!)
             }
 
             val icon =
@@ -75,7 +87,7 @@ fun HomePage(
             Row {
 
                 AsyncImage(
-                    model = viewModel.weather(viewModel.city!!).imgUrl,
+                    model = weather.imgUrl,
                     modifier = modifier.size(140.dp),
                     error = painterResource(id = R.drawable.loading),
                     contentDescription = "Imagem"
@@ -113,33 +125,27 @@ fun HomePage(
                         )
                     }
 
+                    Spacer(modifier = modifier.size(12.dp))
 
-                    viewModel.city?.let { name ->
+                    Text(
+                        text = weather.desc,
+                        fontSize = 22.sp
+                    )
 
-                        val weather = viewModel.weather(name)
+                    Spacer(modifier = modifier.size(12.dp))
 
-                        Spacer(modifier = modifier.size(12.dp))
-
-                        Text(
-                            text = weather.desc,
-                            fontSize = 22.sp
-                        )
-
-                        Spacer(modifier = modifier.size(12.dp))
-
-                        Text(
-                            text = "Temp: ${weather.temp}℃",
-                            fontSize = 22.sp
-                        )
-                    }
+                    Text(
+                        text = "Temp: ${weather.temp}℃",
+                        fontSize = 22.sp
+                    )
                 }
             }
 
-            viewModel.forecast(viewModel.city!!)?.let { forecasts ->
+            forecasts?.let { forecastList ->
 
                 LazyColumn {
 
-                    items(forecasts) { forecast ->
+                    items(items = forecastList) { forecast ->
 
                         ForecastItem(
                             forecast = forecast,
@@ -174,13 +180,12 @@ fun ForecastItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        AsyncImage( // Substitui o Icon
+        AsyncImage(
             model = forecast.imgUrl,
             modifier = modifier.size(70.dp),
             error = painterResource(id = R.drawable.loading),
             contentDescription = "Imagem"
         )
-
 
         Spacer(modifier = modifier.size(16.dp))
 

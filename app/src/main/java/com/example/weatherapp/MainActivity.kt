@@ -46,6 +46,7 @@ import androidx.core.util.Consumer
 import android.content.Intent
 import com.example.weatherapp.db.local.LocalDatabase
 import com.example.weatherapp.repo.Repository
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
@@ -92,6 +93,7 @@ class MainActivity : ComponentActivity() {
                     forecastMonitor
                 )
             )
+            val user = viewModel.user.collectAsStateWithLifecycle(null).value
 
             DisposableEffect(Unit) {
 
@@ -145,7 +147,7 @@ class MainActivity : ComponentActivity() {
                         TopAppBar(
                             title = {
 
-                                val name = viewModel.user?.name ?: "[carregando...]"
+                                val name = user?.name ?: "[carregando...]"
 
                                 Text("Bem-vindo/a! $name")
                             },
