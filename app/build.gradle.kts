@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     kotlin("plugin.serialization")
 
+    id("com.google.devtools.ksp") version "2.3.4"
+
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id("com.google.gms.google-services")
 }
@@ -44,13 +46,16 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.3"
     }
 }
 
@@ -72,6 +77,7 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:3.0.0")
     implementation("io.coil-kt:coil-compose:2.7.0")
 
+
     implementation("androidx.navigation:navigation-compose:2.9.8")
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.firebase.auth)
@@ -84,6 +90,12 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.3.0")
     // Google maps for compose
     implementation("com.google.maps.android:maps-compose:8.3.0")
+
+    val roomVersion = "2.8.4"
+
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion")
 
     testImplementation(libs.junit)
 
